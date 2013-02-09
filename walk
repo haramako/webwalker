@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+$LOAD_PATH << File.dirname(__FILE__)+'/lib'
+require 'webwalker'
+require 'daemon_spawn'
+
+command = ARGV.shift
+
+case command
+when 'one'
+  ARGV.each {|x| obj = WebWalker::Handler.walk x; pp obj.result }
+
+when 'add'
+  ARGV.each { |x| WebWalker::Handler.add_url WebWalker::Project.new(x,x), x }
+
+when 'do_one'
+  ARGV.each { |x| WebWalker::Handler.walk_one x.to_i }
+
+when 'all'
+  WebWalker::Handler.walk_around
+
+when 'daemon'   # daemon化する
+  class WalkerDaemon < DaemonSpawn::Base
+    def start( args )
+      puts 'start'
+      while true
+        WebWalker::Handler.walk_around
+        sleep 1
+      end
+    end
+    def stop
+      puts 'stoped'
+    end
+  end
+
+  opt = { 
+    log_file: '/var/walker/walker.log', 
+    pid_file:'/var/walker/walker.pid', 
+    sync_log: true,
+    working_dir: File.dirname(__FILE__)
+  }
+  WalkerDaemon.spawn! opt, ARGV
+
+when nil
+  puts "Usage: ww add|one|all|daemon"
+else
+  puts "unknown command #{command}"
+  exit 1
+end
