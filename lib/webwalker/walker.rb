@@ -1,4 +1,4 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
 require 'active_record'
 require 'mechanize'
@@ -8,11 +8,13 @@ require 'pathname'
 require 'logger'
 require 'pp'
 
-ActiveRecord::Base.establish_connection( 'adapter' => 'mysql',
-                                         'database' => 'walker' )
+ActiveRecord::Base.establish_connection( adapter: 'mysql2',
+                                         database: 'walker',
+                                         encoding: 'utf8' )
 # ActiveRecord::Base.logger = Logger.new( STDOUT )
 
 IMG_DIR = Pathname('/var/walker/img/')
+ZIP_DIR = Pathname('/var/walker/zip/')
 
 module WebWalker
 
@@ -23,6 +25,13 @@ module WebWalker
       r = IMG_DIR + "%06d"%[id]
       FileUtils.mkdir_p r
       r
+    end
+
+    def zip
+      imgpath = path
+      zippath = ZIP_DIR + "%06d.zip"%[id]
+      system "cd #{imgpath}; zip -r #{zippath} *"
+      zippath
     end
 
   end
@@ -87,10 +96,12 @@ module WebWalker
       x.result[:image].each do |path,img|
         File.open( project.path + path, 'wb' ){|f| f.write img.body }
       end
+
       if x.result[:project_name]
         project.name = x.result[:project_name]
-        project.save!
       end
+      project.updated_at = Time.now
+      project.save!
 
       url.status = 'P'
       url.save!

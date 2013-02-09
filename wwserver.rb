@@ -1,6 +1,10 @@
 #!/usr/bin/env ruby
 # -*- coding:utf-8 -*-
 
+Encoding.default_external = 'UTF-8'
+Encoding.default_internal = 'UTF-8'
+
+
 require 'pathname'
 $LOAD_PATH << File.dirname(__FILE__)+ '/lib'
 
@@ -14,6 +18,11 @@ class MyApp < Sinatra::Base
   use Rack::Auth::Basic, 'Baisc Auth' do |user,pass|
     user == 'makoto' and pass == 'mako0522'
   end
+
+  before do 
+    content_type 'text/html', 'charset' => 'utf-8'
+  end
+
   get '/' do
     erb :index
   end
@@ -46,8 +55,18 @@ class MyApp < Sinatra::Base
     redirect '/project'
   end
 
+  get '/project/zip/:id' do
+    id = params[:id].to_i
+    @proj = WebWalker::Project.find(id)
+    zip = @proj.zip
+    content_type 'application/zip'
+    f = open(zip,'rb')
+    f
+    # redirect '/project'
+  end
+
   get '/url' do
-    @urls = WebWalker::Url.limit(100).find(:all)
+    @urls = WebWalker::Url.where( status: '' ).limit(100).find(:all)
     erb :url_list
   end
 
