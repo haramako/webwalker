@@ -1,13 +1,12 @@
 # coding: utf-8
 
-require 'pp'
+require 'active_record'
 require 'mechanize'
-require 'digest/sha1'
 require 'fileutils'
 require 'uri'
 require 'pathname'
-require 'active_record'
 require 'logger'
+require 'pp'
 
 ActiveRecord::Base.establish_connection( 'adapter' => 'mysql',
                                          'database' => 'walker' )
