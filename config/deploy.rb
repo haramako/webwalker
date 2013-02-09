@@ -20,9 +20,12 @@ set :deploy_to, "/tmp/hoge"
 
 namespace :deploy do
   task :restart do
+    run "cd #{deploy_to}/current && bundle exec thin -d restart"
   end
   task :start do
+    run "cd #{deploy_to}/current && bundle exec thin -d start"
   end
   task :stop do
+    run "cd #{deploy_to}/current && bundle exec thin -d stop"
   end
 end
