@@ -2,12 +2,9 @@
 # -*- coding:utf-8 -*-
 
 require 'pathname'
-HOME = Pathname.new( File.dirname(__FILE__) ) unless defined?(HOME)
-$LOAD_PATH << HOME + 'lib'
+$LOAD_PATH << File.dirname(__FILE__)+ '/lib'
 
 require 'sinatra'
-require 'sinatra/reloader' if development?
-require 'erb'
 require 'webwalker'
 # require 'rack/csrf' TODO: CSRF対策をいれること
 
@@ -37,6 +34,7 @@ class MyApp < Sinatra::Base
     url = params[:url]
     halt if url == ''
     project = WebWalker::Project.new( url: url, name: url)
+    project.save!
     WebWalker::Handler.add_url project, url
     redirect '/project'
   end
