@@ -1,5 +1,16 @@
 <div class="row">
   <div class="span12">
 	<h2><%= @proj.name %></h1>
+	<table class="table">
+	  <tr><th>ID</th><td><%= @proj.id %></td></tr>
+	  <tr><th>URL</th><td><a href="<%= @proj.url %>"><%= @proj.url %></a></td></tr>
+	  <tr><th>作成日時</th><td><%= @proj.created_at %></td></tr>
+	  <tr><th>更新日時</th><td><%= @proj.updated_at %></td></tr>
+	  <tr><th>ZIP作成日時</th><td><%= @proj.zipped_at %></td></tr>
+	  <tr><th></th><td></td></tr>
+	  <tr><th>総URL</th><td><%= @proj.url_all %></td></tr>
+	  <tr><th>成功URL</th><td><%= @proj.url_finished %></td></tr>
+	  <tr><th>失敗URL</th><td><%= @proj.url_failed %></td></tr>
+	</table>
   </div>
 </div>

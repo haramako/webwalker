@@ -18,6 +18,9 @@ ZIP_DIR = Pathname('/var/walker/zip/')
 
 module WebWalker
 
+  #################################################
+  # プロジェクト
+  #################################################
   class Project < ActiveRecord::Base
     has_many :children, class_name: :Url, dependent: :destroy
     
@@ -28,28 +31,37 @@ module WebWalker
     end
 
     def zip
-      imgpath = path
       zippath = ZIP_DIR + "%06d.zip"%[id]
-      system "cd #{imgpath}; zip -r #{zippath} *"
+      unless zipped?
+        FileUtils.mkdir_p ZIP_DIR
+        imgpath = path
+        system "cd #{imgpath}; zip -r #{zippath} *"
+        self.zipped_at = Time.now
+        save!
+      end
       zippath
+    end
+
+    def zipped?
+      zipped_at and zipped_at >= updated_at
     end
 
   end
 
+  #################################################
+  # URL
+  #################################################
   class Url < ActiveRecord::Base
     belongs_to :project
     include ActiveRecord::Calculations
   end
 
 
-
+  #################################################
+  # 
+  #################################################
   module Handler
     module_function
-
-    def db
-      return @@db if defined? @@db
-      @@db = Mysql.new( '127.0.0.1', 'root', nil, 'walker' )
-    end
 
     def add_url( project, url )
       new_url = Url.new( project_id: project.id, url: url, expire_at: Time.now )
@@ -113,8 +125,29 @@ module WebWalker
       raise
     end
 
+    # 定期処理
+    def self.cron
+      sql = <<EOT
+UPDATE projects AS p
+JOIN (
+  SELECT project_id,
+    COUNT(*) AS url_all,
+    SUM( CASE WHEN status='P' THEN 1 ELSE 0 END) AS url_finished,
+    SUM( CASE WHEN status='F' THEN 1 ELSE 0 END) AS url_failed
+  FROM urls GROUP BY project_id
+) AS c ON p.id = c.project_id
+SET p.url_all = c.url_all,
+  p.url_finished = c.url_finished,
+  p.url_failed = p.url_failed
+EOT
+      Project.connection.execute sql
+    end
+
   end
 
+  #################################################
+  # 
+  #################################################
   class Walker
 
     attr_reader :url, :result
@@ -177,6 +210,7 @@ end
 require_relative 'pixiv'
 require_relative 'e-hentai'
 
+# ppなどしたときに、大きくなり過ぎないようにモンキーパッチを当てる
 class Mechanize::Image
   def to_s
     filename

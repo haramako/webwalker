@@ -48,6 +48,9 @@ when 'daemon'   # daemon化する
   }
   WalkerDaemon.spawn! opt, ARGV
 
+when 'cron'
+  WebWalker::Handler.cron
+
 when nil
   puts "Usage: ww add|one|all|daemon"
 else
