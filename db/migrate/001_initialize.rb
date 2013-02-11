@@ -1,9 +1,11 @@
 class Initialize < ActiveRecord::Migration
 
   def self.up
+
     create_table :projects do |t|
       t.column :url, :string, null: false
       t.column :name, :string, null: false
+      t.column :plugin, :string, null: false
       t.column :status, :string, null: false, length:1, default:''
       t.column :url_all, :integer, null: false, default:0
       t.column :url_finished, :integer, null: false, default:0

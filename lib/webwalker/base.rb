@@ -7,6 +7,7 @@ require 'uri'
 require 'pathname'
 require 'logger'
 require 'pp'
+require 'pluginfactory'
 
 ActiveRecord::Base.establish_connection( adapter: 'mysql2',
                                          database: 'walker',
@@ -17,12 +18,66 @@ IMG_DIR = Pathname('/var/walker/img/')
 ZIP_DIR = Pathname('/var/walker/zip/')
 
 module WebWalker
+  
+  #################################################
+  # プラグイン
+  #################################################
+  class Plugin
+    include PluginFactory
+
+    def self.plugin_list
+      unless defined?(@@plugin_list)
+        @@plugin_list = {}
+        derivative_dirs.each do |dir|
+          Dir.glob( dir+'/*.rb' ) do |rbfile|
+            module_name = File.basename( rbfile )[0..-4]
+            @@plugin_list[module_name.to_sym] = get_subclass( module_name )
+          end
+        end
+      end
+      @@plugin_list
+    end
+
+    def self.match_project( url )
+      r = []
+      pp [1,plugin_list]
+      plugin_list.each do |name,plugin|
+        pp plugin.get_project_url
+        if plugin.get_project_url.match(url)
+          r << name
+        end
+      end
+      r
+    end
+
+    def self.derivative_dirs
+      ['./plugin']
+    end
+
+    def self.project_url( regexp )
+      class_variable_set :@@project_url, regexp
+    end
+
+    def self.get_project_url
+      self.class_variable_get :@@project_url
+    end
+  end
 
   #################################################
   # プロジェクト
   #################################################
   class Project < ActiveRecord::Base
     has_many :children, class_name: :Url, dependent: :destroy
+
+    after_initialize do
+      if new_record?
+        self.name ||= ''
+      end
+    end
+
+    def display_name
+      if name == '' then '(未設定)' else name end
+    end
     
     def path
       r = IMG_DIR + "%06d"%[id]
@@ -53,7 +108,6 @@ module WebWalker
   #################################################
   class Url < ActiveRecord::Base
     belongs_to :project
-    include ActiveRecord::Calculations
   end
 
 
@@ -68,23 +122,12 @@ module WebWalker
       new_url.save!
     end
 
-    @@walkers = []
-
-    def self.walker( regexp, _class, &block )
-      @@walkers << { _class: _class, regexp: regexp, block: block }
-    end
-
-    def self.walk( url )
+    def self.walk( plugin_name, url )
       puts "walk: #{url}"
-      @@walkers.each do |w|
-        if match = w[:regexp].match( url )
-          obj = w[:_class].new( url )
-          obj.instance_exec( url, match,  &w[:block] )
-          return obj
-        end
-      end
-      puts "no url match for #{url}"
-      nil
+      plugin = Plugin.get_subclass( plugin_name )
+      w = plugin::Walker.new( url )
+      w.walk url
+      w
     end
 
     def self.walk_around
@@ -97,10 +140,11 @@ module WebWalker
 
     def self.walk_one( url )
       url = WebWalker::Url.find(url) unless url.is_a?(Url)
-      x = walk url.url
+      project = url.project
+
+      x = walk project.plugin, url.url
 
       # 帰ってきた値に応じて動作する
-      project = url.project
       x.result[:url].each do |new_url|
         next if Url.find( :all, conditions: { project_id: project.id, url: new_url } ).size > 0
         Url.new( project: project, url: new_url, created_at: Time.now, expire_at: Time.now ).save!
@@ -109,7 +153,7 @@ module WebWalker
         File.open( project.path + path, 'wb' ){|f| f.write img.body }
       end
 
-      if x.result[:project_name]
+      if x.result[:project_name] and project.name == ''
         project.name = x.result[:project_name]
       end
       project.updated_at = Time.now
@@ -148,7 +192,7 @@ EOT
   #################################################
   # 
   #################################################
-  class Walker
+  class WalkerBase
 
     attr_reader :url, :result
 
@@ -157,6 +201,16 @@ EOT
       @agent = Mechanize.new
       @agent.request_headers['Accept-Language'] = 'ja,en-US'
       @result = { url: [], image: {} }
+    end
+
+    def walk( url )
+      self.class.class_variable_get( :@@walkers ).each do |w|
+        if match = w[:regexp].match( url )
+          instance_exec( url, match,  &w[:block] )
+          return
+        end
+      end
+      raise "not match to #{url}"
     end
 
     def get( url )
@@ -199,7 +253,9 @@ EOT
     end
 
     def self.walker( regexp, &block )
-      Handler.walker regexp, self, &block
+      class_variable_set( :@@walkers, [] ) unless class_variable_defined? :@@walkers
+      walkers = class_variable_get :@@walkers
+      walkers << { regexp: regexp, block: block }
     end
 
   end
@@ -207,8 +263,6 @@ EOT
 end
 
 # require_relative 'taikai'
-require_relative 'pixiv'
-require_relative 'e-hentai'
 
 # ppなどしたときに、大きくなり過ぎないようにモンキーパッチを当てる
 class Mechanize::Image
@@ -216,3 +270,5 @@ class Mechanize::Image
     filename
   end
 end
+
+WebWalker::Plugin.plugin_list

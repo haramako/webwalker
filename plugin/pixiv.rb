@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-require_relative 'walker'
 
-module WebWalker::Plugin
-  class Pixiv < WebWalker::Walker
+class Pixiv < WebWalker::Plugin
+
+  project_url %r(^http://www.pixiv.net/member.php\?id=\d+)
+
+  class Walker < WebWalker::WalkerBase
 
     PIXIV_URL = URI('http://www.pixiv.net/')
 
     def login_pixiv
-      #  puts @@agent.methods
       @agent.cookie_jar.load 'cookie.yaml'
-      @agent.cookie_jar.jar['pixiv.net']['/']['PHPSESSID']
     rescue
       puts "login pixiv"
       @agent.post 'http://www.pixiv.net/login.php', { mode: 'login', pixiv_id: 'haramako', pass: 'mako0522', skip: 1 }
@@ -20,7 +20,6 @@ module WebWalker::Plugin
     walker %r(^http://www\.pixiv\.net/member.php\?id=(\d+)) do |url,match|
       login_pixiv
       page = get url
-
 
       page.search('a').each do |e|
         href = e.attr('href')
@@ -65,8 +64,6 @@ module WebWalker::Plugin
         # open( project_path + (id.to_s + ext), 'w' ){ |f| f.write image }
         # db.prepare('REPLACE images ( id, title, author ) VALUES ( ?, ?, ? )').execute( id, title, author )
       end
-
-      expire 60*60*24*365
     end
 
   end

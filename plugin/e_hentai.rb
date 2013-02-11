@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-module WebWalker::Plugin
-  class EHentai < WebWalker::Walker
+class E_Hentai < WebWalker::Plugin
+  project_url %r(^http://g\.e-hentai\.org/g/(\d+)/([0-9a-f]+)/)
+
+  class Walker < WebWalker::WalkerBase
     BASE_URL = URI('http://g.e-hentai.org/')
 
     # ユーザーページ

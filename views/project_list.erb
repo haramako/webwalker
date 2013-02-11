@@ -10,6 +10,7 @@
 	<table class="table table-borderd table-striped">
 	  <tr>
 		<th>ID</th>
+		<th>Plugin</th>
 		<th>名前</th>
 		<th>URL数</th>
 		<th>操作</th>
@@ -17,7 +18,8 @@
 	  <% @projects.each do |proj|%>
 	  <tr>
 		<td><%= proj.id %></td>
-		<td><a href="<%=proj.url%>"><%= proj.name %></a></td>
+		<td><%= proj.plugin %></td>
+		<td><a href="<%=proj.url%>"><%= proj.display_name %></a></td>
 		<td><%= proj.url_finished %> / <%= proj.url_all %></td>
 		<td>
 		  <a class="btn btn-small" href="/project/<%=proj.id%>">詳細</a>

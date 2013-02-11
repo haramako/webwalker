@@ -1,1 +1,1 @@
-require_relative 'webwalker/walker'
+require_relative 'webwalker/base'
