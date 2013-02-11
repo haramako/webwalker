@@ -10,7 +10,7 @@ set :use_sudo, false
 
 set :deploy_to, "/home/harada/webwalker"
 
-set :whenever_roles, { :app }
+set :whenever_roles, [ :app ]
 
 default_environment['PATH'] = '/var/lib/gems/1.9.1/bin:${PATH}'
 
@@ -33,6 +33,3 @@ namespace :deploy do
 
 end
 
-every 1.minutes, role: [:db] do
-  command "date"
-end
