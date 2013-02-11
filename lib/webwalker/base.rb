@@ -64,7 +64,7 @@ module WebWalker
   end
 
   #################################################
-  # プロジェクト
+  # プロジェクトモデル
   #################################################
   class Project < ActiveRecord::Base
     has_many :children, class_name: :Url, dependent: :destroy
@@ -73,6 +73,11 @@ module WebWalker
       if new_record?
         self.name ||= ''
       end
+    end
+
+    before_destroy do
+      FileUtils.rm_rf path
+      FileUtils.rm_f zippath
     end
 
     def display_name
@@ -86,7 +91,6 @@ module WebWalker
     end
 
     def zip
-      zippath = ZIP_DIR + "%06d.zip"%[id]
       unless zipped?
         FileUtils.mkdir_p ZIP_DIR
         imgpath = path
@@ -97,6 +101,10 @@ module WebWalker
       zippath
     end
 
+    def zippath
+      ZIP_DIR + "%06d.zip"%[id]
+    end
+
     def zipped?
       zipped_at and zipped_at >= updated_at
     end
@@ -104,7 +112,7 @@ module WebWalker
   end
 
   #################################################
-  # URL
+  # URLモデル
   #################################################
   class Url < ActiveRecord::Base
     belongs_to :project
@@ -116,11 +124,6 @@ module WebWalker
   #################################################
   module Handler
     module_function
-
-    def add_url( project, url )
-      new_url = Url.new( project_id: project.id, url: url, expire_at: Time.now )
-      new_url.save!
-    end
 
     def self.walk( plugin_name, url )
       puts "walk: #{url}"
@@ -262,13 +265,9 @@ EOT
 
 end
 
-# require_relative 'taikai'
-
 # ppなどしたときに、大きくなり過ぎないようにモンキーパッチを当てる
 class Mechanize::Image
   def to_s
     filename
   end
 end
-
-WebWalker::Plugin.plugin_list

@@ -10,6 +10,9 @@ include WebWalker
 command = ARGV.shift
 
 case command
+when 'list'
+  puts Plugin.plugin_list.keys
+
 when 'one'
   pp Handler.walk( ARGV[0], ARGV[1] ).result
 

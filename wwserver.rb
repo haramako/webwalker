@@ -5,6 +5,7 @@ $LOAD_PATH << File.dirname(__FILE__) + '/lib'
 
 require 'sinatra/base'
 require 'webwalker'
+require 'rack/flash'
 # require 'rack/csrf' TODO: CSRF対策をいれること
 
 class MyApp < Sinatra::Base
@@ -24,6 +25,13 @@ class MyApp < Sinatra::Base
 
   end
 
+  # セッションとフラッシュの設定
+  use Rack::Session::Cookie, secret: '0b3b395b8706d7585ac8dd92cd44cd71'
+  use Rack::Flash, accessorize: [:info, :error, :success], sweep: true
+  def flash
+    env['x-rack.flash']
+  end
+
   # Basic認証
   use Rack::Auth::Basic, 'Baisc Auth' do |user,pass|
     user == 'makoto' and pass == 'mako0522'
@@ -39,7 +47,7 @@ class MyApp < Sinatra::Base
   end
 
   get '/project' do
-    @projects = WebWalker::Project.find(:all)
+    @projects = WebWalker::Project.order( 'id desc' ).find(:all)
     @title = 'プロジェクト一覧'
     erb :project_list
   end
@@ -58,14 +66,17 @@ class MyApp < Sinatra::Base
     raise "need match to *just* one" if plugins.size > 1
     project = WebWalker::Project.new( url: url, plugin: plugins[0].to_s )
     project.save!
-    WebWalker::Handler.add_url project, url
+    url = WebWalker::Url.new( url:url, project_id:project.id, expire_at:Time.now )
+    url.save!
+    flash.success = "'#{project.display_name}'を作成しました"
     redirect '/project'
   end
 
   get '/project/delete/:id' do
     id = params[:id].to_i
-    @proj = WebWalker::Project.find(id)
-    @proj.destroy
+    project = WebWalker::Project.find(id)
+    project.destroy
+    flash.success = "'#{project.display_name}'を削除しました"
     redirect '/project'
   end
 
@@ -82,14 +93,17 @@ class MyApp < Sinatra::Base
   end
 
   get '/url' do
-    @urls = WebWalker::Url.where( status: '' ).limit(100).find(:all)
+    @urls = WebWalker::Url.where( status: '' ).order(:expire_at).limit(100).find(:all)
     @title = 'URL一覧'
     erb :url_list
   end
 
   get '/url/delete/:id' do
-    WebWalker::Url.find(params[:id].to_i).destroy
-    erb :url_list
+    url = WebWalker::Url.find(params[:id].to_i)
+    url.destroy
+    flash.success = "#{url.url}を削除しました"
+    redirect '/url'
   end
+
 
 end

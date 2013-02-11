@@ -18,6 +18,13 @@
   </div>
 </div>
 
+<% [:error,:info,:success].each do |tag| %>
+<% next unless flash[tag] %>
+<div class="alert alert-<%=tag%>">
+  <button type="button" class="close" data-dismiss="alert">&times;</button><%=flash[tag]%>
+</div>
+<% end %>
+
 <!-- main content -->
 <div class="container">
 <%=yield%>

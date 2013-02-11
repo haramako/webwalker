@@ -7,13 +7,13 @@ class E_Hentai < WebWalker::Plugin
     BASE_URL = URI('http://g.e-hentai.org/')
 
     # ユーザーページ
-    walker %r(^http://g\.e-hentai\.org/g/(\d+)/([0-9a-f]+)/) do |url,match|
+    walker %r(^http://g\.e-hentai\.org/g/(\d+)/([0-9a-f]+)/(\?p=\d+)?$) do |url,match|
       page = get url
 
       page.search('a').each do |e|
         href = e.attr('href')
         add_url href if href and href.match %r(^http://g\.e-hentai\.org/s/)
-        add_url href if href and href.match %r(^http://g.e-hentai.org/g/.*/\?p=\d+)
+        add_url href if href and href.match %r(^http://g.e-hentai.org/g/.*/\?p=\d+$)
       end
 
       project_name page.search('h1#gn').text
