@@ -221,7 +221,7 @@ EOT
         sleep 1
       end
 
-      # puts "downloading #{url}"
+      puts "downloading #{url}"
       page = @agent.get url, [], 'http://www.pixiv.net/'
 
       case page
