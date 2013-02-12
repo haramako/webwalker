@@ -164,7 +164,7 @@ module WebWalker
 
       url.status = 'P'
       url.save!
-    rescue Mechanize::ResponseCodeError, Errno::ETIMEDOUT
+    rescue Mechanize::ResponseCodeError, Errno::ETIMEDOUT, Timeout::Error, Errorno::ECONRESET
       url.status = 'F'
       url.save!
       pp $!

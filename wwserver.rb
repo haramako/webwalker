@@ -86,7 +86,8 @@ class MyApp < Sinatra::Base
     zip = @proj.zip
     content_type 'application/zip'
     # UTF-8でファイル名を指定している See: http://stackoverflow.com/questions/1361604/how-to-encode-utf8-filename-for-http-headers-python-django
-    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{URI.encode(@proj.name)}.zip"
+    # また、','が含まれるとエラーになるため、','=>'%2c'に追加でエンコードしている
+    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{URI.encode(@proj.name,',')}.zip"
     f = open(zip,'rb')
     f
     # redirect '/project'

@@ -5,6 +5,6 @@
 
 set :output, "/var/walker/cron.log"
 
-every 1.minutes do
+every 10.minutes do
   command "cd #{path} && bundle exec ruby walk cron"
 end
