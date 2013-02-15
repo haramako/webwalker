@@ -9,6 +9,7 @@ role :app, "dorubako.ddo.jp"                          # This may be the same as 
 set :use_sudo, false
 
 set :deploy_to, "/home/harada/webwalker"
+set :shared_children, %w( tmp log tmp/pids )
 
 set :whenever_roles, [ :app ]
 set :whenever_command, 'bundle exec whenever'
