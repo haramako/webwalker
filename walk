@@ -4,44 +4,54 @@
 $LOAD_PATH << File.dirname(__FILE__)+'/lib'
 require 'webwalker'
 require 'daemon_spawn'
-
-include WebWalker
+require 'logger'
+require 'fluent-logger'
 
 command = ARGV.shift
 
+# WebWalker.logger = Fluent::Logger::FluentLogger.open(nil, host:'localhost' )
+WebWalker.logger_ = Fluent::Logger::ConsoleLogger.new(STDOUT)
+
 case command
 when 'list'
-  puts Plugin.plugin_list.keys
+  puts WebWalker::Plugin.plugin_list.keys
 
 when 'one'
-  pp Handler.walk( ARGV[0], ARGV[1] ).result
+  pp WebWalker::Handler.walk( ARGV[0], ARGV[1] ).result
 
 when 'add'
-  ARGV.each { |x| Handler.add_url Project.new(x), x }
+  ARGV.each { |x| WebWalker::Handler.add_url WebWalker::Project.new(x), x }
 
 when 'do_one'
-  ARGV.each { |x| Handler.walk_one x.to_i }
+  ARGV.each { |x| WebWalker::Handler.walk_one x.to_i }
 
 when 'all'
   WebWalker::Handler.walk_around
 
 when 'zip'
   ARGV.each do |x|
-    proj = Project.find(x.to_i)
+    proj = WebWalker::Project.find(x.to_i)
     puts proj.zip
   end
 
 when 'daemon'   # daemon化する
   class WalkerDaemon < DaemonSpawn::Base
     def start( args )
-      puts 'start'
-      while true
-        WebWalker::Handler.walk_around
-        sleep 1
+      WebWalker.logger_ = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' )
+      WebWalker.logger_.post 'info', 'start'
+      begin
+        while true
+          WebWalker::Handler.walk_around
+          sleep 1
+        end
+      rescue
+        WebWalker.logger_.post 'error', msg: $!.to_s, backtrace: $!.backtrace
+        puts $!, $!.backtrace
+        sleep 60
       end
     end
     def stop
-      puts 'stoped'
+      # WebWalker.logger_.post 'info', 'stop'
     end
   end
 
@@ -54,7 +64,7 @@ when 'daemon'   # daemon化する
   WalkerDaemon.spawn! opt, ARGV
 
 when 'cron'
-  Handler.cron
+  WebWalker::Handler.cron
 
 when nil
   puts "Usage: ww add|one|all|daemon"

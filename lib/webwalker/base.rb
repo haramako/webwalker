@@ -5,13 +5,12 @@ require 'mechanize'
 require 'fileutils'
 require 'uri'
 require 'pathname'
-require 'logger'
 require 'pp'
 require 'pluginfactory'
 
-ActiveRecord::Base.establish_connection( adapter: 'mysql2',
-                                         database: 'walker',
-                                         encoding: 'utf8' )
+ActiveRecord::Base.establish_connection( :adapter => 'mysql2',
+                                         :database => 'walker',
+                                         :encoding => 'utf8' )
 # ActiveRecord::Base.logger = Logger.new( STDOUT )
 
 IMG_DIR = Pathname('/var/walker/img/')
@@ -19,6 +18,18 @@ ZIP_DIR = Pathname('/var/walker/zip/')
 
 module WebWalker
   
+  def self.logger_
+    unless defined? @@logger_
+      @@logger_ = Logger.new(File::NULL)
+      @@logger_.level = Logger::DEBUG
+    end
+    @@logger_
+  end
+
+  def self.logger_=(val)
+    @@logger_ = val
+  end
+
   #################################################
   # プラグイン
   #################################################
@@ -67,7 +78,7 @@ module WebWalker
   # プロジェクトモデル
   #################################################
   class Project < ActiveRecord::Base
-    has_many :children, class_name: :Url, dependent: :destroy
+    has_many :children, :class_name => :Url, :dependent => :destroy
 
     after_initialize do
       if new_record?
@@ -126,7 +137,7 @@ module WebWalker
     module_function
 
     def self.walk( plugin_name, url )
-      puts "walk: #{url}"
+      WebWalker.logger_.post 'walk', :url => url
       plugin = Plugin.get_subclass( plugin_name )
       w = plugin::Walker.new( url )
       w.walk url
@@ -135,7 +146,7 @@ module WebWalker
 
     def self.walk_around
       while true
-        url = Url.limit(1).find( :all, conditions: { status: ''}, order: :expire_at )
+        url = Url.limit(1).find( :all, :conditions => { :status => ''}, :order => :expire_at )
         break if url.size <= 0
         walk_one url[0]
       end
@@ -149,8 +160,8 @@ module WebWalker
 
       # 帰ってきた値に応じて動作する
       x.result[:url].each do |new_url|
-        next if Url.find( :all, conditions: { project_id: project.id, url: new_url } ).size > 0
-        Url.new( project: project, url: new_url, created_at: Time.now, expire_at: Time.now ).save!
+        next if Url.find( :all, :conditions => { :project_id => project.id, :url => new_url } ).size > 0
+        Url.new( :project => project, :url => new_url, :created_at => Time.now, :expire_at => Time.now ).save!
       end
       x.result[:image].each do |path,img|
         File.open( project.path + path, 'wb' ){|f| f.write img.body }
@@ -203,7 +214,11 @@ EOT
       @cur_url = url
       @agent = Mechanize.new
       @agent.request_headers['Accept-Language'] = 'ja,en-US'
-      @result = { url: [], image: {} }
+      @result = { :url => [], :image => {} }
+    end
+
+    def log( tag, data )
+      WebWalker.logger_.post 'ww.'+tag, data
     end
 
     def walk( url )
@@ -221,7 +236,7 @@ EOT
         sleep 1
       end
 
-      puts "downloading #{url}"
+      log 'debug', :url => url
       page = @agent.get url, [], 'http://www.pixiv.net/'
 
       case page
@@ -230,7 +245,7 @@ EOT
       else
         html = page.root.to_s
         if html.match(/The ban expires/) # Banが終わるまで待つ
-          puts 'wait!'
+          log 'info.wait', :url => url, :msg =>'wait for e-hentai ban, 1 hour'
           sleep 60*60
           get( url )
         end
@@ -258,7 +273,7 @@ EOT
     def self.walker( regexp, &block )
       class_variable_set( :@@walkers, [] ) unless class_variable_defined? :@@walkers
       walkers = class_variable_get :@@walkers
-      walkers << { regexp: regexp, block: block }
+      walkers << { :regexp => regexp, :block => block }
     end
 
   end

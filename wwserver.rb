@@ -26,8 +26,8 @@ class MyApp < Sinatra::Base
   end
 
   # セッションとフラッシュの設定
-  use Rack::Session::Cookie, secret: '0b3b395b8706d7585ac8dd92cd44cd71'
-  use Rack::Flash, accessorize: [:info, :error, :success], sweep: true
+  use Rack::Session::Cookie, :secret => '0b3b395b8706d7585ac8dd92cd44cd71'
+  use Rack::Flash, :accessorize => [:info, :error, :success], :sweep => true
   def flash
     env['x-rack.flash']
   end
@@ -64,9 +64,9 @@ class MyApp < Sinatra::Base
     plugins = WebWalker::Plugin.match_project( url )
     raise "no match found" if plugins.size <= 0
     raise "need match to *just* one" if plugins.size > 1
-    project = WebWalker::Project.new( url: url, plugin: plugins[0].to_s )
+    project = WebWalker::Project.new( :url => url, :plugin => plugins[0].to_s )
     project.save!
-    url = WebWalker::Url.new( url:url, project_id:project.id, expire_at:Time.now )
+    url = WebWalker::Url.new( :url =>url, :project_id => project.id, :expire_at => Time.now )
     url.save!
     flash.success = "'#{project.display_name}'を作成しました"
     redirect '/project'
@@ -85,16 +85,15 @@ class MyApp < Sinatra::Base
     @proj = WebWalker::Project.find(id)
     zip = @proj.zip
     content_type 'application/zip'
-    # UTF-8でファイル名を指定している See: http://stackoverflow.com/questions/1361604/how-to-encode-utf8-filename-for-http-headers-python-django
-    # また、','が含まれるとエラーになるため、','=>'%2c'に追加でエンコードしている
-    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{URI.encode(@proj.name,',')}.zip"
+    # UTF-8でダウンロードするファイル名を指定している 
+    # See: http://stackoverflow.com/questions/1361604/how-to-encode-utf8-filename-for-http-headers-python-django
+    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{URI.encode(@proj.name,/[^#{URI::PATTERN::ALNUM}]/)}.zip"
     f = open(zip,'rb')
     f
-    # redirect '/project'
   end
 
   get '/url' do
-    @urls = WebWalker::Url.where( status: '' ).order(:expire_at).limit(100).find(:all)
+    @urls = WebWalker::Url.where( :status => '' ).order(:expire_at).limit(100).find(:all)
     @title = 'URL一覧'
     erb :url_list
   end
@@ -105,6 +104,5 @@ class MyApp < Sinatra::Base
     flash.success = "#{url.url}を削除しました"
     redirect '/url'
   end
-
 
 end
