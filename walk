@@ -45,7 +45,7 @@ when 'daemon'   # daemon化する
           sleep 1
         end
       rescue
-        WebWalker.logger.post 'error', msg: $!.to_s, backtrace: $!.backtrace
+        WebWalker.logger.post 'error', msg: $!.to_s, clazz: $!.class.to_s, backtrace: $!.backtrace
         puts $!, $!.backtrace
         sleep 60
       end

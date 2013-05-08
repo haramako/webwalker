@@ -9,7 +9,7 @@ class E_Hentai < WebWalker::Plugin
     BASE_URL = URI('http://g.e-hentai.org/')
 
     walker %r(^http://g\.e-hentai\.org/g/(\d+)/([0-9a-f]+)/(\?p=\d+)?$) do |url,match|
-      page = get url
+      page = get( url + "?nw=session" )
 
       page.search('a').each do |e|
         href = e.attr('href')

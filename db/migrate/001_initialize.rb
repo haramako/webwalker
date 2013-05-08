@@ -2,7 +2,7 @@ class Initialize < ActiveRecord::Migration
 
   def self.up
 
-    create_table :projects do |t|
+    create_table :projects, :options => 'DEFAULT CHARSET=utf8' do |t|
       t.column :url, :string, null: false
       t.column :name, :string, null: false
       t.column :plugin, :string, null: false

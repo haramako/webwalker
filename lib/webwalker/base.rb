@@ -176,7 +176,7 @@ module WebWalker
 
       url.status = 'P'
       url.save!
-    rescue Mechanize::ResponseCodeError, Errno::ETIMEDOUT, Timeout::Error, Errorno::ECONRESET
+    rescue Mechanize::ResponseCodeError, Errno::ETIMEDOUT, Timeout::Error, Errno::ECONNRESET, Net::HTTP::Persistent::Error, Errno::EHOSTUNREACH
       url.status = 'F'
       url.save!
       pp $!
