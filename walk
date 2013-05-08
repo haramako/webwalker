@@ -10,7 +10,7 @@ require 'fluent-logger'
 command = ARGV.shift
 
 # WebWalker.logger = Fluent::Logger::FluentLogger.open(nil, host:'localhost' )
-WebWalker.logger_ = Fluent::Logger::ConsoleLogger.new(STDOUT)
+WebWalker.logger = Fluent::Logger::ConsoleLogger.new(STDOUT)
 
 case command
 when 'list'
@@ -37,21 +37,20 @@ when 'zip'
 when 'daemon'   # daemon化する
   class WalkerDaemon < DaemonSpawn::Base
     def start( args )
-      WebWalker.logger_ = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' )
-      WebWalker.logger_.post 'info', 'start'
+      WebWalker.logger = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' )
+      WebWalker.logger.post 'info', 'start'
       begin
         while true
           WebWalker::Handler.walk_around
           sleep 1
         end
       rescue
-        WebWalker.logger_.post 'error', msg: $!.to_s, backtrace: $!.backtrace
+        WebWalker.logger.post 'error', msg: $!.to_s, backtrace: $!.backtrace
         puts $!, $!.backtrace
         sleep 60
       end
     end
     def stop
-      # WebWalker.logger_.post 'info', 'stop'
     end
   end
 

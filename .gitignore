@@ -2,3 +2,5 @@
 [#]*
 log
 cookie.yaml
+tmp
+restart.txt

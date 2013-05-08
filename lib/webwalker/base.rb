@@ -10,6 +10,7 @@ require 'pluginfactory'
 
 ActiveRecord::Base.establish_connection( :adapter => 'mysql2',
                                          :database => 'walker',
+                                         :charset => 'utf8',
                                          :encoding => 'utf8' )
 # ActiveRecord::Base.logger = Logger.new( STDOUT )
 
@@ -18,16 +19,16 @@ ZIP_DIR = Pathname('/var/walker/zip/')
 
 module WebWalker
   
-  def self.logger_
-    unless defined? @@logger_
-      @@logger_ = Logger.new(File::NULL)
-      @@logger_.level = Logger::DEBUG
+  def self.logger
+    unless defined? @@logger
+      @@logger = Logger.new(File::NULL)
+      @@logger.level = Logger::DEBUG
     end
-    @@logger_
+    @@logger
   end
 
-  def self.logger_=(val)
-    @@logger_ = val
+  def self.logger=(val)
+    @@logger = val
   end
 
   #################################################
@@ -137,7 +138,7 @@ module WebWalker
     module_function
 
     def self.walk( plugin_name, url )
-      WebWalker.logger_.post 'walk', :url => url
+      WebWalker.logger.post 'walk', :url => url
       plugin = Plugin.get_subclass( plugin_name )
       w = plugin::Walker.new( url )
       w.walk url
@@ -218,7 +219,7 @@ EOT
     end
 
     def log( tag, data )
-      WebWalker.logger_.post 'ww.'+tag, data
+      WebWalker.logger.post 'ww.'+tag, data
     end
 
     def walk( url )

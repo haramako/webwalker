@@ -6,9 +6,17 @@ $LOAD_PATH << File.dirname(__FILE__) + '/lib'
 require 'sinatra/base'
 require 'webwalker'
 require 'rack/flash'
+require 'fluent-logger'
+
 # require 'rack/csrf' TODO: CSRF対策をいれること
 
+
 class MyApp < Sinatra::Base
+
+  configure do
+    # WebWalker.logger = Fluent::Logger::FluentLogger.open(nil, host:'localhost' )
+    @@logger = WebWalker.logger = Fluent::Logger::ConsoleLogger.new(STDERR)
+  end
 
   # 開発時は、リローダを使う
   configure :development do
@@ -37,9 +45,15 @@ class MyApp < Sinatra::Base
     user == 'makoto' and pass == 'mako0522'
   end
 
+  def logger
+    @@logger
+  end
+
   before do 
     # content_type 'text/html', 'charset' => 'utf-8'
   end
+
+  #=============== ルーティング ================
 
   get '/' do
     @title = 'トップ'
