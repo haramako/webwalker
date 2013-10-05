@@ -62,7 +62,7 @@ class MyApp < Sinatra::Base
   end
 
   get '/project' do
-    @projects = WebWalker::Project.order( 'id desc' ).find(:all)
+    @projects = WebWalker::Project.order( 'id desc' )
     @title = 'プロジェクト一覧'
     erb :project_list
   end
@@ -102,13 +102,14 @@ class MyApp < Sinatra::Base
     content_type 'application/zip'
     # UTF-8でダウンロードするファイル名を指定している 
     # See: http://stackoverflow.com/questions/1361604/how-to-encode-utf8-filename-for-http-headers-python-django
-    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{URI.encode(@proj.name,/[^#{URI::PATTERN::ALNUM}]/)}.zip"
+    name = if @proj.name.empty? then @proj.id.to_s else @proj.name end
+    headers 'Content-Disposition' => "attachment; filename=\"#{@proj.id}.zip\"; filename*=UTF-8''#{::URI.encode(name,/[^#{::URI::PATTERN::ALNUM}]/)}.zip"
     f = open(zip,'rb')
     f
   end
 
   get '/url' do
-    @urls = WebWalker::Url.where( :status => '' ).order(:expire_at).limit(100).find(:all)
+    @urls = WebWalker::Url.where( :status => '' ).order(:expire_at).limit(100)
     @title = 'URL一覧'
     erb :url_list
   end

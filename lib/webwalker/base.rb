@@ -31,6 +31,9 @@ module WebWalker
     @@logger = val
   end
 
+  class CannotWalk < RuntimeError
+  end
+
   #################################################
   # プラグイン
   #################################################
@@ -176,7 +179,7 @@ module WebWalker
 
       url.status = 'P'
       url.save!
-    rescue Mechanize::ResponseCodeError, Errno::ETIMEDOUT, Timeout::Error, Errno::ECONNRESET, Net::HTTP::Persistent::Error, Errno::EHOSTUNREACH
+    rescue WebWalker::CannotWalk, Mechanize::ResponseCodeError, Errno::ETIMEDOUT, Timeout::Error, Errno::ECONNRESET, Net::HTTP::Persistent::Error, Errno::EHOSTUNREACH
       url.status = 'F'
       url.save!
       pp $!
@@ -284,6 +287,6 @@ end
 # ppなどしたときに、大きくなり過ぎないようにモンキーパッチを当てる
 class Mechanize::Image
   def to_s
-    filename
+    "#<Image:#{filename}>"
   end
 end

@@ -7,17 +7,10 @@ class Taikai < WebWalker::Plugin
 
     TAIKAI_URL = 'http://www.taikaisyu.com/'
 
-    def get_image( url )
-      image = get url
-      path = url.gsub( /^http:\/\//, '' )
-      dir = File.dirname( path )
-      FileUtils.mkdir_p( "#{IMG_DIR}#{dir}" )
-      open( "#{IMG_DIR}#{path}", 'w' ){ |f| f.write image }
-    end
-
     # 画像
     walker %r(^http://www\.taikaisyu\.com/.*\.jpg) do |url,match|
-      get_image url
+      path = url.gsub( /^http:\/\/www\.taikaisyu\.com\//, '' ).gsub(/\//){'_'}
+      add_image path, get( url )
       { expire: 60*60*24*365 }
     end
 
@@ -32,20 +25,19 @@ class Taikai < WebWalker::Plugin
         # puts href
       end
 
-      page.search('img').each do |e|
-        src = URI.join( url, e.attr('src') ).to_s
-        next unless /\/\d+\.jpg$/ === src 
-        add_url src
+      begin
+        page.search('img').each do |e|
+          src = URI.join( url, e.attr('src') ).to_s
+          next unless /\/\d+\.jpg$/ === src 
+          add_url src
+        end
+      rescue URI::InvalidURIError
+        raise WebWalker::CannotWalk.new( "invalid uri in #{url}" )
       end
 
       { expire: 60*60*24*365 }
     end
 
-
-    #walk 'http://www.taikaisyu.com/'
-    #walk 'http://www.taikaisyu.com/soukan/map.html'
-    #walk 'http://www.taikaisyu.com/27-03/15.jpg'
-    #walk_around
   end
 
 end
