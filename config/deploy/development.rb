@@ -1,4 +1,4 @@
-role :app, "localhost"
+role :app, "default"
 
 set :scm, :none
 set :repository,  "."

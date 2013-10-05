@@ -1,1 +1,19 @@
-{"run_list":["apt", "git", "ruby_build", "rbenv::user"]}
+{
+	"mysql": {
+		"server_debian_password": "", 
+		"server_root_password": "",
+		"server_repl_password": ""
+	},
+    "rbenv": {
+        "user_installs": [{
+            "user": "vagrant",
+            "rubies": ["1.9.3-p448"],
+            "global": "1.9.3-p448",
+            "gems": {"1.9.3-p448": [{"name": "bundler"}]}
+        }]
+    },
+
+	"run_list":[
+		"apt", "git", "ruby_build", "rbenv::user", "mysql::server"
+	]
+}

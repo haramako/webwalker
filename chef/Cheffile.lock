@@ -30,6 +30,15 @@ GIT
   specs:
     rbenv (0.7.2)
 
+GIT
+  remote: git://github.com/treasure-data/chef-td-agent/
+  ref: master
+  sha: e59c017560cebc689f23827c368e5be9c6b2b77d
+  specs:
+    td-agent (0.0.1)
+      apt (>= 0.0.0)
+      yum (>= 0.0.0)
+
 DEPENDENCIES
   apt (>= 0)
   git (>= 0)
@@ -37,4 +46,5 @@ DEPENDENCIES
   openssl (>= 0)
   rbenv (>= 0)
   ruby_build (>= 0)
+  td-agent (>= 0)
 

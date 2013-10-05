@@ -38,8 +38,8 @@ when 'daemon'   # daemon化する
   class WalkerDaemon < DaemonSpawn::Base
     def start( args )
       # PENDING
-      #WebWalker.logger = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' ) 
-      WebWalker.logger = Fluent::Logger::NullLogger.open
+      WebWalker.logger = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' ) 
+      # WebWalker.logger = Fluent::Logger::NullLogger.open
       WebWalker.logger.post 'info', msg: 'start'
       begin
         while true
@@ -56,7 +56,6 @@ when 'daemon'   # daemon化する
     end
   end
 
-  WebWalker.logger = Fluent::Logger::NullLogger.open
   WebWalker.logger.post 'info', msg: 'start'
   opt = { 
     log_file: '/var/walker/walker.log', 

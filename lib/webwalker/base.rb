@@ -147,7 +147,7 @@ module WebWalker
 
     def self.walk_around
       while true
-        url = Url.limit(1).find( :all, :conditions => { :status => ''}, :order => :expire_at )
+        url = Url.limit(1).where(:status => '').order( :expire_at )
         break if url.size <= 0
         walk_one url[0]
       end
@@ -161,7 +161,7 @@ module WebWalker
 
       # 帰ってきた値に応じて動作する
       x.result[:url].each do |new_url|
-        next if Url.find( :all, :conditions => { :project_id => project.id, :url => new_url } ).size > 0
+        next if Url.where( :project_id => project.id, :url => new_url ).size > 0
         Url.new( :project => project, :url => new_url, :created_at => Time.now, :expire_at => Time.now ).save!
       end
       x.result[:image].each do |path,img|

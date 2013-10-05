@@ -9,3 +9,6 @@ cookbook 'openssl'
 cookbook 'mysql'
 cookbook 'ruby_build'
 cookbook 'rbenv', git: 'git://github.com/fnichol/chef-rbenv.git', ref: "v0.7.2"
+
+cookbook 'td-agent', git: 'git://github.com/treasure-data/chef-td-agent/'
+

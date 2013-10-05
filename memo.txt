@@ -36,5 +36,6 @@ $ sudo mkdir /opt/webwalker /var/walker
 $ sudo chown vagrant:vagrant /opt/webwalker /var/walker
 $ exit
 $ cap production deploy:setup
+$ cap production deploy:update
 $ cap production deploy:migrate
 $ cap production deploy:start
