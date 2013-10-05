@@ -7,3 +7,34 @@
 
 - ProjectごとにWalkerクラスを割り当てる
 - Walkerのプラグイン化
+
+
+* インストールメモ
+
+** プロビジョニング( vagrant )
+
+VirtualBox, vagrant のインストール
+$ vagrant plugin install vagrant-omnibus
+$ vagrant plugin install vagrant-librarian-chef
+$ cd chef
+$ librarian-chef install
+$ vagrant up
+
+** プロビジョニング( chef-solo )
+
+マシンのセットアップ
+$ cd chef
+$ knife solo prepare webwalker
+$ knife solo cook webwalker
+
+** デプロイ
+
+$ ssh webwalker
+(...ログインする...)
+$ mysql -u root -e 'create database walker'
+$ sudo mkdir /opt/webwalker /var/walker
+$ sudo chown vagrant:vagrant /opt/webwalker /var/walker
+$ exit
+$ cap production deploy:setup
+$ cap production deploy:migrate
+$ cap production deploy:start

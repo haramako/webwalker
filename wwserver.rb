@@ -7,6 +7,7 @@ require 'sinatra/base'
 require 'webwalker'
 require 'rack/flash'
 require 'fluent-logger'
+require 'erb'
 
 # require 'rack/csrf' TODO: CSRF対策をいれること
 

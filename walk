@@ -37,8 +37,10 @@ when 'zip'
 when 'daemon'   # daemon化する
   class WalkerDaemon < DaemonSpawn::Base
     def start( args )
-      WebWalker.logger = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' )
-      WebWalker.logger.post 'info', 'start'
+      # PENDING
+      #WebWalker.logger = Fluent::Logger::FluentLogger.open('wwd', host:'localhost' ) 
+      WebWalker.logger = Fluent::Logger::NullLogger.open
+      WebWalker.logger.post 'info', msg: 'start'
       begin
         while true
           WebWalker::Handler.walk_around
@@ -54,6 +56,8 @@ when 'daemon'   # daemon化する
     end
   end
 
+  WebWalker.logger = Fluent::Logger::NullLogger.open
+  WebWalker.logger.post 'info', msg: 'start'
   opt = { 
     log_file: '/var/walker/walker.log', 
     pid_file:'/var/walker/walker.pid', 

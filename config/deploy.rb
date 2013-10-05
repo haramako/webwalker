@@ -1,17 +1,16 @@
 require 'bundler/capistrano'
 require 'whenever/capistrano'
-
-role :app, "dorubako.ddo.jp"                          # This may be the same as your `Web` server
-
+require 'capistrano/ext/multistage'
+require 'capistrano-rbenv'
+set :rbenv_ruby_version, '1.9.3-p448'
 
 set :application, "webwalker"
-set :repository,  "git@github.com:haramako/webwalker.git"
 
-set :use_sudo, false
-
-set :deploy_to, "/home/harada/webwalker"
+set :deploy_to, "/opt/webwalker"
 set :shared_children, %w( tmp log tmp/pids )
 set :public_children, []
+
+set :use_sudo, false
 
 set :whenever_roles, [ :app ]
 set :whenever_command, 'bundle exec whenever'
@@ -34,5 +33,8 @@ namespace :deploy do
     run "cd #{deploy_to}/current && bundle exec ./walk daemon stop"
   end
 
-end
+  task :migrate, role: :app do
+    run "cd #{deploy_to}/current && bundle exec rake db:migrate"
+  end
 
+end
